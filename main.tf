@@ -281,3 +281,7 @@ output "Bastion Host IP" {
 output "DNS for ELB" {
   value = "${aws_elb.jenkins_elb.dns_name}"
 }
+
+output "ELB Instances" {
+  value = "${aws_elb.jenkins_elb.instances}"
+}
