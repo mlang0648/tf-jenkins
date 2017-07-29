@@ -2,16 +2,31 @@
 
 cd ~
 sudo yum update -y
-sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo
+wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo
+#sudo wget -O /etc/yum.repos.d/jenkins-2.46.3-1.1.repo http://pkg.jenkins-ci.org/redhat-stable/jenkins-2.46.3-1.1.noarch.rpm
 #sudo wget -O /etc/yum.repos.d/jenkins.repo
 sudo rpm --import http://pkg.jenkins-ci.org/redhat-stable/jenkins-ci.org.key
 #sudo rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key
 
+sudo adduser jenkins
+sudo mkdir /home/jenkins/.ssh
+sudo ssh-keygen -f /home/jenkins/.ssh/id_rsa -t rsa -N ''
+
+sudo chown -R jenkins:jenkins /home/jenkins/.ssh
+sudo chmod 700 /home/jenkins/.ssh
+sudo chmod 600 /home/jenkins/.ssh/*
+
+
 sudo yum install git -y
+#sudo yum install jenkins-2.46.3-1.1 -y
 sudo yum install jenkins -y
 
 sudo service jenkins start
 sudo service jenkins stop
+
+sudo yum install java-1.8.0 -y
+echo 2 | sudo /usr/sbin/alternatives --config java
+sudo yum remove java-1.7.0-openjdk -y
 
 sudo rm -R /var/lib/jenkins/*
 
@@ -22,3 +37,10 @@ sudo chown -R jenkins:jenkins /var/lib/jenkins
 sudo service jenkins start
 
 echo `sudo service jenkins status`
+
+# install node.js 8
+sudo curl --silent --location https://rpm.nodesource.com/setup_8.x | bash -
+sudo yum -y install nodejs
+
+# install mocha
+sudo npm install --global mocha

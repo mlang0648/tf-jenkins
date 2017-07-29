@@ -1,6 +1,6 @@
 provider "aws" {
   region                  = "us-west-2"
-  shared_credentials_file = "/Users/mlang0648/.aws/credentials"
+  shared_credentials_file = "/Users/mlang/.aws/credentials"
   profile                 = "default"
 }
 
@@ -22,19 +22,35 @@ module "vpc" {
 }
 # End VPC ------------------
 
-# Bsation Host -------------------------
+# Bastion Host -------------------------
 resource "aws_instance" "bastion_host" {
   ami           = "ami-f173cc91"
   instance_type = "t2.micro"
   subnet_id     = "${module.vpc.public_subnets[0]}"
   associate_public_ip_address = true
-  security_groups = ["${aws_security_group.allow_all_ssh.id}","${aws_security_group.allow_all_outbound.id}"]
+  vpc_security_group_ids = ["${aws_security_group.allow_all_ssh.id}","${aws_security_group.allow_all_outbound.id}"]
   key_name = "tf-dev-account"
   tags {
     Name = "bastion-host"
   }
 }
 # End Bastion Host-----------------------------
+
+# Node Server -------------------------
+resource "aws_instance" "nodeserver" {
+  ami           = "ami-6df1e514"
+  instance_type = "t2.micro"
+  subnet_id     = "${module.vpc.private_subnets[0]}"
+  vpc_security_group_ids = ["${aws_security_group.allow_all_ssh.id}","${aws_security_group.allow_all_outbound.id}"]
+  key_name = "tf-dev-account"
+  user_data = "${file("./templates/node_user_data")}"
+  tags {
+    Name = "node-server"
+  }
+}
+# End Node Server-----------------------------
+
+  # associate_public_ip_address = true
 
 # Security Groups-----------------------------------
 resource "aws_security_group" "allow_all_ssh" {
@@ -184,7 +200,6 @@ resource "aws_elb" "jenkins_elb" {
 
 # Jenkins autoscaling--------------------------------------
 resource "aws_launch_configuration" "jenkins_lc" {
-    name = "jenkins_lc"
     instance_type = "t2.micro"
     image_id = "ami-8ca83fec"
     iam_instance_profile = "${aws_iam_instance_profile.tf-jenkins-profile.id}"
@@ -210,6 +225,13 @@ resource "aws_autoscaling_group" "jenkins_asg" {
     launch_configuration = "${aws_launch_configuration.jenkins_lc.name}"
     load_balancers = ["${aws_elb.jenkins_elb.id}"]
     health_check_type = "EC2"
+    tags = [
+      {
+        key                 = "Name"
+        value               = "jenkins-server"
+        propagate_at_launch = true
+      },
+    ]
 }
 #Jenkins autoscaling-------------------------------------
 

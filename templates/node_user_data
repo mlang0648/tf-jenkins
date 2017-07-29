@@ -1,0 +1,20 @@
+#!/bin/bash
+
+cd ~
+sudo yum update -y
+
+# install node.js 8
+sudo curl --silent --location https://rpm.nodesource.com/setup_8.x | bash -
+sudo yum -y install nodejs
+
+# install mocha
+sudo npm install --global mocha
+
+# create node user and setup .ssh directory
+sudo adduser node
+
+sudo mkdir /home/node/.ssh
+sudo touch /home/node/.ssh/authorized_keys
+sudo chown -R node:node /home/jenkins/.ssh
+sudo chmod 700 /home/node/.ssh
+sudo chmod 600 /home/node/.ssh/*
